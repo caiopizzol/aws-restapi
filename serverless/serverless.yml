@@ -1,0 +1,242 @@
+service: mozio
+frameworkVersion: '2'
+configValidationMode: warn
+variablesResolutionMode: 20210326
+
+plugins:
+  - serverless-python-requirements
+
+provider:
+  name: aws
+  runtime: python3.8
+  stage: dev
+  region: us-east-2
+  memorySize: 1024 # optional, in MB, default is 1024
+  timeout: 30 # optional, in seconds, default is 6
+  lambdaHashingVersion: 20201221
+  vpc:
+    securityGroupIds:
+      - sg-5232863d
+    subnetIds:
+      - subnet-ec284496
+      - subnet-140cd858
+      - subnet-3995a251
+
+  iam.role.managedPolicies:
+    - 'arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess'
+
+  iam.role.statements:
+    # SSM Role
+    - Effect: 'Allow'
+      Action: 'ssm:GetParameters'
+      Resource:
+        - 'arn:aws:ssm:us-east-2:#{AWS::689726266135}:parameter/MOZIO_DBNAME'
+        - 'arn:aws:ssm:us-east-2:#{AWS::689726266135}:parameter/MOZIO_DBUSER'
+        - 'arn:aws:ssm:us-east-2:#{AWS::689726266135}:parameter/MOZIO_DBPASS'
+        - 'arn:aws:ssm:us-east-2:#{AWS::689726266135}:parameter/MOZIO_DBHOST'
+        - 'arn:aws:ssm:us-east-2:#{AWS::689726266135}:parameter/MOZIO_DBPORT'
+    - Effect: Allow
+      Action: 'KMS:Decrypt'
+      Resource: 'arn:aws:kms:us-east-2:689726266135:key/9ab03596-ee9f-4fc1-a11d-c722cf81f997'
+
+package:
+  individually: true
+  patterns:
+    - '!node_modules/**'
+    - '!package-lock.json'
+    - '!package.json'
+    - '!serverless.yml'
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+
+functions:
+  create_provider:
+    handler: function.handler
+    module: app/create_provider
+    environment:
+      DBNAME: ${ssm:MOZIO_DBNAME}
+      DBUSER: ${ssm:MOZIO_DBUSER}
+      DBPASS: ${ssm:MOZIO_DBPASS}
+      DBHOST: ${ssm:MOZIO_DBHOST}  
+      DBPORT: ${ssm:MOZIO_DBPORT}
+    package:
+      patterns:
+        - '!app/**'
+        - 'app/create_provider/**'
+    events:
+      - http:
+          path: providers
+          method: post         
+
+  delete_provider:
+    handler: function.handler
+    module: app/delete_provider
+    environment:
+      DBNAME: ${ssm:MOZIO_DBNAME}
+      DBUSER: ${ssm:MOZIO_DBUSER}
+      DBPASS: ${ssm:MOZIO_DBPASS}
+      DBHOST: ${ssm:MOZIO_DBHOST} 
+      DBPORT: ${ssm:MOZIO_DBPORT} 
+    package:
+      patterns:
+        - '!app/**'
+        - 'app/delete_provider/**'
+    events:
+      - http:
+          path: providers/{id}
+          method: delete         
+  update_provider:
+    handler: function.handler
+    module: app/update_provider
+    environment:
+      DBNAME: ${ssm:MOZIO_DBNAME}
+      DBUSER: ${ssm:MOZIO_DBUSER}
+      DBPASS: ${ssm:MOZIO_DBPASS}
+      DBHOST: ${ssm:MOZIO_DBHOST}  
+      DBPORT: ${ssm:MOZIO_DBPORT}
+    package:
+      patterns:
+        - '!app/**'
+        - 'app/update_provider/**'
+    events:
+      - http:
+          path: providers/{id}
+          method: put            
+  get_provider:
+    handler: function.handler
+    module: app/get_provider
+    environment:
+      DBNAME: ${ssm:MOZIO_DBNAME}
+      DBUSER: ${ssm:MOZIO_DBUSER}
+      DBPASS: ${ssm:MOZIO_DBPASS}
+      DBHOST: ${ssm:MOZIO_DBHOST}  
+      DBPORT: ${ssm:MOZIO_DBPORT}
+    package:
+      patterns:
+        - '!app/**'
+        - 'app/get_provider/**'    
+    events:
+      - http:
+          path: providers/{id}
+          method: get        
+  get_service_area:
+    handler: function.handler
+    module: app/get_service_area
+    environment:
+      DBNAME: ${ssm:MOZIO_DBNAME}
+      DBUSER: ${ssm:MOZIO_DBUSER}
+      DBPASS: ${ssm:MOZIO_DBPASS}
+      DBHOST: ${ssm:MOZIO_DBHOST}  
+      DBPORT: ${ssm:MOZIO_DBPORT}
+    package:
+      patterns:
+        - '!app/**'
+        - 'app/get_service_area/**'
+    events:
+      - http:
+          path: service_areas/{id}
+          method: get              
+  create_service_area:
+    handler: function.handler
+    module: app/create_service_area
+    environment:
+      DBNAME: ${ssm:MOZIO_DBNAME}
+      DBUSER: ${ssm:MOZIO_DBUSER}
+      DBPASS: ${ssm:MOZIO_DBPASS}
+      DBHOST: ${ssm:MOZIO_DBHOST}  
+      DBPORT: ${ssm:MOZIO_DBPORT}
+    package:
+      patterns:
+        - '!app/**'
+        - 'app/create_service_area/**'   
+    events:
+      - http:
+          path: service_areas
+          method: post 
+  update_service_area:
+    handler: function.handler
+    module: app/update_service_area
+    environment:
+      DBNAME: ${ssm:MOZIO_DBNAME}
+      DBUSER: ${ssm:MOZIO_DBUSER}
+      DBPASS: ${ssm:MOZIO_DBPASS}
+      DBDBHOST: ${ssm:MOZIO_DBHOST}
+      DBPORT: ${ssm:MOZIO_DBPORT}
+    package:
+      patterns:
+        - '!app/**'
+        - 'app/update_service_area/**'  
+    events:
+      - http:
+          path: service_areas/{id}
+          method: put          
+  delete_service_area:
+    handler: function.handler
+    module: app/delete_service_area
+    environment:
+      DBNAME: ${ssm:MOZIO_DBNAME}
+      DBUSER: ${ssm:MOZIO_DBUSER}
+      DBPASS: ${ssm:MOZIO_DBPASS}
+      DBHOST: ${ssm:MOZIO_DBHOST}  
+      DBPORT: ${ssm:MOZIO_DBPORT}
+    package:
+      patterns:
+        - '!app/**'
+        - 'app/delete_service_area/**'  
+    events:
+      - http:
+          path: service_areas/{id}
+          method: delete                      
+  get_service_area_within_coordinates:
+    handler: function.handler
+    module: app/get_service_area_within_coordinates
+    environment:
+      DBNAME: ${ssm:MOZIO_DBNAME}
+      DBUSER: ${ssm:MOZIO_DBUSER}
+      DBPASS: ${ssm:MOZIO_DBPASS}
+      DBHOST: ${ssm:MOZIO_DBHOST}  
+      DBPORT: ${ssm:MOZIO_DBPORT}
+    package:
+      patterns:
+        - '!app/**'
+        - 'app/get_service_area_within_coordinates/**'  
+    events:
+      - http:
+          path: service_areas/check_coordinates
+          method: get     
+  list_providers:
+    handler: function.handler
+    module: app/list_providers
+    environment:
+      DBNAME: ${ssm:MOZIO_DBNAME}
+      DBUSER: ${ssm:MOZIO_DBUSER}
+      DBPASS: ${ssm:MOZIO_DBPASS}
+      DBHOST: ${ssm:MOZIO_DBHOST}  
+      DBPORT: ${ssm:MOZIO_DBPORT}
+    package:
+      patterns:
+        - '!app/**'
+        - 'app/list_providers/**'  
+    events:
+      - http:
+          path: providers
+          method: get                                                         
+  list_service_areas:
+    handler: function.handler
+    module: app/list_service_areas
+    environment:
+      DBNAME: ${ssm:MOZIO_DBNAME}
+      DBUSER: ${ssm:MOZIO_DBUSER}
+      DBPASS: ${ssm:MOZIO_DBPASS}
+      DBHOST: ${ssm:MOZIO_DBHOST}  
+      DBPORT: ${ssm:MOZIO_DBPORT}
+    package:
+      patterns:
+        - '!app/**'
+        - 'app/list_service_areas/**'  
+    events:
+      - http:
+          path: service_areas
+          method: get        
