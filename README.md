@@ -1,4 +1,4 @@
-# Mozio - Code Test
+# Project Description
 
 This project contains all required files to build and run an API from scratch using Serverless Framework on AWS
 
